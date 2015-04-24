@@ -18,12 +18,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
 
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
 import com.google.common.base.Optional;
+import com.seyren.core.Metrics;
 import com.seyren.core.domain.Alert;
 import com.seyren.core.domain.AlertType;
 import com.seyren.core.domain.Check;
@@ -37,6 +42,8 @@ import com.seyren.core.store.ChecksStore;
 public class CheckRunner implements Runnable {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(CheckRunner.class);
+    private static final Timer RUN_TIMER = Metrics.registry().timer(MetricRegistry.name(CheckRunner.class, "runTime"));
+    private static final Meter ERROR_METER = Metrics.registry().meter(MetricRegistry.name(CheckRunner.class, "errors"));
     
     private final Check check;
     private final AlertsStore alertsStore;
@@ -60,6 +67,9 @@ public class CheckRunner implements Runnable {
         if (!check.isEnabled()) {
             return;
         }
+        
+        long start = System.currentTimeMillis();
+        boolean failed = false;
         
         try {
             Map<String, Optional<BigDecimal>> targetValues = targetChecker.check(check);
@@ -146,7 +156,15 @@ public class CheckRunner implements Runnable {
             }
             
         } catch (Exception e) {
+            ERROR_METER.mark();
             LOGGER.warn("{} failed", check.getName(), e);
+            failed = true;
+        } finally {
+            long duration = System.currentTimeMillis() - start;
+            if (!failed) {
+                RUN_TIMER.update(duration, TimeUnit.MILLISECONDS);
+            }
+            LOGGER.debug("Checking {} took {}ms", check.getName(), duration);
         }
     }
     

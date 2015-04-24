@@ -22,6 +22,7 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.inject.Named;
 
+import org.apache.commons.lang.BooleanUtils;
 import org.apache.velocity.app.Velocity;
 import org.apache.velocity.runtime.RuntimeConstants;
 
@@ -48,6 +49,11 @@ public class SeyrenConfig {
     private final int graphiteConnectionRequestTimeout;
     private final int graphiteConnectTimeout;
     private final int graphiteSocketTimeout;
+    private final boolean carbonMetricsEnabled;
+    private final String carbonHost;
+    private final int carbonPort;
+    private final long carbonSendInterval;
+    private final String carbonPrefix;
     private final String twilioUrl;
     private final String twilioAccountSid;
     private final String twilioAuthToken;
@@ -79,6 +85,7 @@ public class SeyrenConfig {
     private final String snmpOID;
     private final String emailTemplateFileName;
     private final int noOfThreads;
+    
     public SeyrenConfig() {
         
         // Base
@@ -98,6 +105,12 @@ public class SeyrenConfig {
         this.graphiteConnectionRequestTimeout = Integer.parseInt(configOrDefault("GRAPHITE_CONNECTION_REQUEST_TIMEOUT", "0"));
         this.graphiteConnectTimeout = Integer.parseInt(configOrDefault("GRAPHITE_CONNECT_TIMEOUT", "0"));
         this.graphiteSocketTimeout = Integer.parseInt(configOrDefault("GRAPHITE_SOCKET_TIMEOUT", "0"));
+        // Carbon
+        this.carbonMetricsEnabled = BooleanUtils.toBoolean(configOrDefault("GRAPHITE_METRICS_ENABLED", "false"));
+        this.carbonHost = configOrDefault("CARBON_HOST", "");
+        this.carbonPort = Integer.parseInt(configOrDefault("CARBON_PORT", "2003"));
+        this.carbonSendInterval = Long.parseLong(configOrDefault("CARBON_SEND_INTERVAL_SECONDS", "60"));
+        this.carbonPrefix = configOrDefault("CARBON_PREFIX", "");
         
         // SMTP
         this.smtpFrom = configOrDefault(list("SMTP_FROM", "SEYREN_FROM_EMAIL"), "alert@seyren");
@@ -362,6 +375,31 @@ public class SeyrenConfig {
     @JsonIgnore
     public int getGraphiteSocketTimeout() {
         return graphiteSocketTimeout;
+    }
+    
+    @JsonIgnore
+    public boolean getCarbonMetricsEnabled() {
+        return carbonMetricsEnabled;
+    }
+    
+    @JsonIgnore
+    public String getCarbonHost() {
+        return carbonHost;
+    }
+    
+    @JsonIgnore
+    public int getCarbonPort() {
+        return carbonPort;
+    }
+    
+    @JsonIgnore
+    public long getCarbonSendInterval() {
+        return carbonSendInterval;
+    }
+    
+    @JsonIgnore
+    public String getCarbonPrefix() {
+        return carbonPrefix;
     }
 
     @JsonIgnore

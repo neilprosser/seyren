@@ -66,6 +66,13 @@ The following options can be supplied as system properties or environment variab
 * `GRAPHITE_CONNECT_TIMEOUT` - The number of milliseconds to wait to establish a connection. Default: `0` (infinite)
 * `GRAPHITE_SOCKET_TIMEOUT` - The number of milliseconds to wait for request data. Default: `0` (infinite)
 
+##### Metrics
+* `GRAPHITE_METRICS_ENABLED` - Whether we should enable sending metrics to Carbon. Default: `false`
+* `CARBON_HOST` - The Carbon host to send metrics to. Default: ``
+* `CARBON_PORT` - The port to use when sending metrics to Carbon. Default: `2003`
+* `CARBON_SEND_INTERVAL_SECONDS` - The number of seconds between sending metrics to Carbon. Default: `60`
+* `CARBON_PREFIX` - The prefix to use for metrics. Default: ``
+
 ##### [Email](http://en.wikipedia.org/wiki/Simple_Mail_Transfer_Protocol)
 * `SMTP_HOST` - The smtp server to send email notifications from. Default: `localhost`
 * `SMTP_PORT` - The smtp server port. Default: `25`

@@ -22,16 +22,24 @@ import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import com.seyren.core.util.config.SeyrenConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.seyren.core.Metrics;
 import com.seyren.core.domain.Check;
 import com.seyren.core.store.ChecksStore;
+import com.seyren.core.util.config.SeyrenConfig;
 
 @Named
 public class CheckScheduler {
     
+    private static final Logger LOGGER = LoggerFactory.getLogger(CheckScheduler.class);
+    private static final Timer RUN_TIMER = Metrics.registry().timer(MetricRegistry.name(CheckScheduler.class, "runTime"));
+
     private final ScheduledExecutorService executor;
     private final ChecksStore checksStore;
     private final CheckRunnerFactory checkRunnerFactory;
@@ -46,10 +54,16 @@ public class CheckScheduler {
     
     @Scheduled(fixedRateString = "${GRAPHITE_REFRESH:60000}")
     public void performChecks() {
+        long start = System.currentTimeMillis();
+        
         List<Check> checks = checksStore.getChecks(true, false).getValues();
         for (final Check check : checks) {
             executor.execute(checkRunnerFactory.create(check));
         }
+        
+        long duration = System.currentTimeMillis() - start;
+        LOGGER.debug("Check run took {}ms", duration);
+        RUN_TIMER.update(duration, TimeUnit.MILLISECONDS);
     }
     
     @PreDestroy
